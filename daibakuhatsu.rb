@@ -43,27 +43,32 @@ loop do
   end
   object = JSON.parse variable.gsub(%r{(?://\s+.*$|"\s+\+\s+")}, '').gsub(%r{^\s*([A-Za-z0-9_\-]+)\s?:\s+}, '"\1": ')
 
-  path = File.expand_path "./#{object['artist']} - #{object['current']['title']}"
-  FileUtils.mkdir_p(path)
+  if object['freeDownloadPage'] != nil
+    puts "\n#{object['artist']} - #{object['current']['title']} is a Free/Name your Price release! Download it here:"
+    puts "#{object['freeDownloadPage']}\n\n"
+  else
+    path = File.expand_path "./#{object['artist']} - #{object['current']['title']}"
+    FileUtils.mkdir_p(path)
 
-  # Download cover image
-  File.open "#{path}/cover.jpg", "wb" do |f|
-    f.write HTTParty.get(object['artFullsizeUrl']).parsed_response
-  end
-
-  # Initiate ruby-progressbar
-  format = '%t (%c/%C) [%b>%i] %e'
-  total = object['trackinfo'].count
-  progress = ProgressBar.create title: "Downloading #{object['artist']} - #{object['current']['title']}", format: format, starting_at: 0, total: total
-  
-  # Download songs
-  object['trackinfo'].each do |song|
-    File.open "#{path}/#{object['artist']} - #{song['title']}.mp3", "wb" do |f|
-      f.write HTTParty.get(song['file']['mp3-128']).parsed_response
+    # Download cover image
+    File.open "#{path}/cover.jpg", "wb" do |f|
+      f.write HTTParty.get(object['artFullsizeUrl']).parsed_response
     end
-    progress.increment
+
+    # Initiate ruby-progressbar
+    format = '%t (%c/%C) [%b>%i] %e'
+    total = object['trackinfo'].count
+    progress = ProgressBar.create title: "Downloading #{object['artist']} - #{object['current']['title']}", format: format, starting_at: 0, total: total
+    
+    # Download songs
+    object['trackinfo'].each do |song|
+      File.open "#{path}/#{object['artist']} - #{song['title']}.mp3", "wb" do |f|
+        f.write HTTParty.get(song['file']['mp3-128']).parsed_response
+      end
+      progress.increment
+    end
+    puts "Download of #{object['artist']} - #{object['current']['title']} finished!\n\n"
   end
-  puts "Download of #{object['artist']} - #{object['current']['title']} finished!\n\n"
 
   # Reset variables
   variable = ""
