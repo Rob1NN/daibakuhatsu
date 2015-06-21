@@ -20,9 +20,8 @@ def open(url)
   return response.body
 end
 
-loop do
-  print "Enter Bandcamp Album/Track URL: "
-  album_url = gets.chomp
+def download(url)
+  album_url = list
   
   doc = Nokogiri::HTML(open(album_url))
 
@@ -73,4 +72,32 @@ loop do
   # Reset variables
   variable = ""
   scripts = []
+end
+
+def check(url)
+  doc = Nokogiri::HTML(open(url))
+
+  links = doc.css('a').map { |link| link['href'] }
+  albums = ""
+  
+  links.each do |link|
+    unless link == nil
+      if link.match(/^\/album\//)
+        link[0] = ""
+        albums << " "+url+link
+      end
+    end
+  end
+
+  albums[0] = ""
+
+  return albums
+end
+
+loop do
+  print "Enter Bandcamp Album/Track URL: "
+  page_url = gets.chomp
+  list = check(page_url)
+  puts list
+  #download(list)
 end
